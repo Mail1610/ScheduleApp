@@ -1,16 +1,35 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+import tkinter as tk
+from pages.input_page import InputPage
+from pages.schedule_page import SchedulePage
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+class ScheduleApp:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("糾察隊排班系統")
+        self.root.geometry("1150x760")
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+        self.container = tk.Frame(self.root)
+        self.container.pack(fill="both", expand=True)
+
+        self.input_page = InputPage(self.container, self)
+        self.schedule_page = SchedulePage(self.container, self)
+
+        self.input_page.place(relwidth=1, relheight=1)
+        self.schedule_page.place(relwidth=1, relheight=1)
+
+    def show_input_page(self):
+        self.input_page.tkraise()
+
+    def show_schedule_page(self, data):
+        self.schedule_page.render(data)
+        self.schedule_page.tkraise()
+
+    def run(self):
+        self.show_input_page()
+        self.root.mainloop()
+
+
+if __name__ == "__main__":
+    app = ScheduleApp()
+    app.run()
