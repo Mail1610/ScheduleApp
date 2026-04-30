@@ -8,125 +8,110 @@ from collections import defaultdict
 
 class InputPage(tk.Frame):
     def __init__(self, parent, app):
-        super().__init__(parent)
+        super().__init__(parent, bg="black")
         self.app = app
-
-        tk.Label(self, text="排班系統", font=("微軟正黑體", 20, "bold")).pack(pady=10)
-
-        top_frame = tk.Frame(self)
-        top_frame.pack(pady=5)
-
-        tk.Label(top_frame, text="起始日期：", font=("微軟正黑體", 10)).grid(row=0, column=0, padx=5)
-
-        self.start = DateEntry(
-            top_frame,
-            width=12
-        )
-        self.start.grid(row=0, column=1, padx=5)
-
-        tk.Label(top_frame, text="天數：", font=("微軟正黑體", 10)).grid(row=0, column=2, padx=5)
-        self.days = tk.Entry(top_frame, width=6)
-        self.days.insert(0, "5")
-        self.days.grid(row=0, column=3, padx=5)
-
-        main_frame = tk.Frame(self)
-        main_frame.pack(pady=10)
-
-        # 內勤
-        frame1 = tk.Frame(main_frame)
-        frame1.grid(row=0, column=0, padx=12)
-
-        tk.Label(frame1, text="【內勤人員】", font=("微軟正黑體", 11, "bold")).pack(anchor="w")
-        tk.Label(frame1, text="一行一個名字", font=("微軟正黑體", 9), fg="gray").pack(anchor="w")
-
-        self.indoor = tk.Text(frame1, height=6, width=28, font=("微軟正黑體", 10))
-        self.indoor.pack()
-
-        # 外勤
-        frame2 = tk.Frame(main_frame)
-        frame2.grid(row=0, column=1, padx=12)
-
-        tk.Label(frame2, text="【外勤人員】", font=("微軟正黑體", 11, "bold")).pack(anchor="w")
-        tk.Label(frame2, text="一行一個名字", font=("微軟正黑體", 9), fg="gray").pack(anchor="w")
-
-        self.outdoor = tk.Text(frame2, height=6, width=28, font=("微軟正黑體", 10))
-        self.outdoor.pack()
-
-        # 指定不排班
-        frame3 = tk.Frame(main_frame)
-        frame3.grid(row=0, column=2, padx=12)
-
-        tk.Label(frame3, text="【指定不排班】", font=("微軟正黑體", 11, "bold")).pack(anchor="w")
-
-        tk.Label(frame3, text="選擇人員：", font=("微軟正黑體", 9)).pack(anchor="w")
-        self.avoid_person = ttk.Combobox(frame3, width=20, state="readonly")
-        self.avoid_person.pack(anchor="w", pady=2)
-
-        tk.Label(frame3, text="選擇日期：", font=("微軟正黑體", 9)).pack(anchor="w")
-        self.avoid_date = DateEntry(
-            frame3,
-            width=8
-        )
-        self.avoid_date.pack(anchor="w", pady=2)
-
-        avoid_button_frame = tk.Frame(frame3)
-        avoid_button_frame.pack(anchor="w", pady=5)
-
-        tk.Button(
-            avoid_button_frame,
-            text="新增",
-            width=6,
-            command=self.add_avoid
-        ).grid(row=0, column=0, padx=3)
-
-        tk.Button(
-            avoid_button_frame,
-            text="刪除",
-            width=6,
-            command=self.remove_avoid
-        ).grid(row=0, column=1, padx=3)
-
-        tk.Button(
-            avoid_button_frame,
-            text="更新名單",
-            width=8,
-            command=self.refresh_combobox
-        ).grid(row=0, column=2, padx=3)
-
-        self.avoid_listbox = tk.Listbox(
-            frame3,
-            height=6,
-            width=30,
-            font=("微軟正黑體", 10)
-        )
-        self.avoid_listbox.pack()
-
-        button_frame = tk.Frame(self)
-        button_frame.pack(pady=12)
-
-        tk.Button(
-            button_frame,
-            text="儲存",
-            width=10,
-            command=self.save
-        ).grid(row=0, column=0, padx=8)
-
-        tk.Button(
-            button_frame,
-            text="產生",
-            width=10,
-            command=self.run
-        ).grid(row=0, column=1, padx=8)
 
         tk.Label(
             self,
-            text="※ 修改人員名單後，請先按「儲存」或「更新名單」；排班天數最多 5 天。",
+            text="糾察隊排班系統",
+            font=("微軟正黑體", 24, "bold"),
+            bg="black",
+            fg="#00ff26"
+        ).pack(pady=(25, 10))
+
+        top_frame = tk.LabelFrame(
+            self,
+            text="排班設定",
+            font=("微軟正黑體", 11, "bold"),
+            bg="#0b0b0b",
+            fg="#00ff26",
+            padx=20,
+            pady=12,
+            bd=2,
+            relief="groove"
+        )
+        top_frame.pack(pady=10)
+
+        tk.Label(top_frame, text="起始日期：", font=("微軟正黑體", 10), bg="#0b0b0b", fg="white").grid(row=0, column=0, padx=8)
+        self.start = DateEntry(top_frame, width=12)
+        self.start.grid(row=0, column=1, padx=8)
+
+        tk.Label(top_frame, text="天數：", font=("微軟正黑體", 10), bg="#0b0b0b", fg="white").grid(row=0, column=2, padx=8)
+        self.days = tk.Entry(top_frame, width=6)
+        self.days.insert(0, "5")
+        self.days.grid(row=0, column=3, padx=8)
+
+        main_frame = tk.Frame(self, bg="black")
+        main_frame.pack(pady=15)
+
+        frame1 = self.create_box(main_frame, "內勤人員", "一行一個名字", 0)
+        self.indoor = tk.Text(frame1, height=7, width=28, font=("微軟正黑體", 10), bg="#050505", fg="#00ff26", insertbackground="#00ff26")
+        self.indoor.pack(padx=10, pady=(5, 10))
+
+        frame2 = self.create_box(main_frame, "外勤人員", "一行一個名字", 1)
+        self.outdoor = tk.Text(frame2, height=7, width=28, font=("微軟正黑體", 10), bg="#050505", fg="#00ff26", insertbackground="#00ff26")
+        self.outdoor.pack(padx=10, pady=(5, 10))
+
+        frame3 = self.create_box(main_frame, "指定不排班", "新增後才會生效", 2)
+
+        tk.Label(frame3, text="選擇人員：", font=("微軟正黑體", 9), bg="#0b0b0b", fg="white").pack(anchor="w", padx=10)
+        self.avoid_person = ttk.Combobox(frame3, width=22, state="readonly")
+        self.avoid_person.pack(anchor="w", padx=10, pady=3)
+
+        tk.Label(frame3, text="選擇日期：", font=("微軟正黑體", 9), bg="#0b0b0b", fg="white").pack(anchor="w", padx=10)
+        self.avoid_date = DateEntry(frame3, width=12)
+        self.avoid_date.pack(anchor="w", padx=10, pady=3)
+
+        avoid_button_frame = tk.Frame(frame3, bg="#0b0b0b")
+        avoid_button_frame.pack(anchor="w", padx=10, pady=5)
+
+        tk.Button(avoid_button_frame, text="新增", width=6, command=self.add_avoid).grid(row=0, column=0, padx=3)
+        tk.Button(avoid_button_frame, text="刪除", width=6, command=self.remove_avoid).grid(row=0, column=1, padx=3)
+        tk.Button(avoid_button_frame, text="更新名單", width=8, command=self.refresh_combobox).grid(row=0, column=2, padx=3)
+
+        self.avoid_listbox = tk.Listbox(frame3, height=7, width=30, font=("微軟正黑體", 10), bg="#050505", fg="#00ff26")
+        self.avoid_listbox.pack(padx=10, pady=(5, 10))
+
+        button_frame = tk.Frame(self, bg="black")
+        button_frame.pack(pady=12)
+
+        tk.Button(button_frame, text="儲存人員", width=12, command=self.save).grid(row=0, column=0, padx=10)
+        tk.Button(button_frame, text="產生排班表", width=14, command=self.run).grid(row=0, column=1, padx=10)
+
+        tk.Label(
+            self,
+            text="※ 修改人員名單後，請按「儲存人員」或「更新名單」；排班天數最多 5 天。",
             font=("微軟正黑體", 9),
-            fg="red"
+            fg="#00ff26",
+            bg="black"
         ).pack(pady=5)
 
         self.load()
         self.refresh_combobox()
+
+    def create_box(self, parent, title, subtitle, column):
+        box = tk.LabelFrame(
+            parent,
+            text=f"【{title}】",
+            font=("微軟正黑體", 11, "bold"),
+            bg="#0b0b0b",
+            fg="#00ff26",
+            padx=8,
+            pady=8,
+            bd=2,
+            relief="groove"
+        )
+        box.grid(row=0, column=column, padx=12, sticky="n")
+
+        tk.Label(
+            box,
+            text=subtitle,
+            font=("微軟正黑體", 9),
+            fg="#8cff8c",
+            bg="#0b0b0b"
+        ).pack(anchor="w", padx=10)
+
+        return box
 
     def get(self, box):
         return [
@@ -154,6 +139,8 @@ class InputPage(tk.Frame):
 
         if people:
             self.avoid_person.current(0)
+        else:
+            self.avoid_person.set("")
 
     def add_avoid(self):
         name = self.avoid_person.get()
@@ -165,8 +152,7 @@ class InputPage(tk.Frame):
 
         text = f"{name},{date.month:02d}/{date.day:02d}"
 
-        existing = self.avoid_listbox.get(0, tk.END)
-        if text in existing:
+        if text in self.avoid_listbox.get(0, tk.END):
             messagebox.showwarning("提醒", "這筆不排班已經存在")
             return
 
