@@ -1,15 +1,63 @@
 import tkinter as tk
+import random
 from tkinter import messagebox, ttk
 from tkcalendar import DateEntry
 from scheduler import Scheduler
 import config_manager
 from collections import defaultdict
 
+class RainLayer:
+    def __init__(self, canvas, width=1120, height=680):
+        self.canvas = canvas
+        self.width = width
+        self.height = height
+        self.drops = []
+
+        for _ in range(80):
+            self.drops.append({
+                "x": random.randint(0, width),
+                "y": random.randint(-height, height),
+                "length": random.randint(60, 160),
+                "speed": random.randint(6, 15),
+                "line_width": random.choice([2, 3])
+            })
+
+        self.animate()
+
+    def animate(self):
+        self.canvas.delete("rain")
+
+        for drop in self.drops:
+            x = drop["x"]
+            y = drop["y"]
+            length = drop["length"]
+
+            self.canvas.create_line(x, y, x, y + length, fill="#003b00", width=drop["line_width"] + 6, tags="rain")
+            self.canvas.create_line(x, y, x, y + length, fill="#00ff26", width=drop["line_width"], tags="rain")
+
+            drop["y"] += drop["speed"]
+
+            if drop["y"] > self.height:
+                drop["y"] = random.randint(-400, -50)
+                drop["x"] = random.randint(0, self.width)
+
+        self.canvas.after(35, self.animate)
+
 
 class InputPage(tk.Frame):
     def __init__(self, parent, app):
         super().__init__(parent, bg="black")
         self.app = app
+
+        # ✅ 背景動畫 Canvas
+        self.bg_canvas = tk.Canvas(self, bg="black", highlightthickness=0)
+        self.bg_canvas.place(x=0, y=0, relwidth=1, relheight=1)
+
+        # ✅ 啟動雨動畫
+        self.rain_layer = RainLayer(self.bg_canvas, 1150, 760)
+        self.open_box = None
+        self.open_header = None
+        self.open_title = None
 
         tk.Label(
             self,
@@ -174,14 +222,28 @@ class InputPage(tk.Frame):
 
         return content
 
-
     def toggle_box(self, header, content, title):
-        if content.winfo_ismapped():
+        # 如果點的是目前已打開的區塊，就關起來
+        if self.open_box == content and content.winfo_ismapped():
             content.pack_forget()
-            header.config(text=f"▶【{title}】")
-        else:
-            content.pack(anchor="w", pady=5)
             header.config(text=f"▼【{title}】")
+            self.open_box = None
+            self.open_header = None
+            self.open_title = None
+            return
+
+        # 先關掉上一個已打開的區塊
+        if self.open_box is not None and self.open_box.winfo_ismapped():
+            self.open_box.pack_forget()
+            self.open_header.config(text=f"▼【{self.open_title}】")
+
+        # 打開目前點選的區塊
+        content.pack(anchor="w", pady=5)
+        header.config(text=f"▲【{title}】")
+
+        self.open_box = content
+        self.open_header = header
+        self.open_title = title
 
     def get(self, box):
         return [

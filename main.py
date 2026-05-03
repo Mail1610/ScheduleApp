@@ -122,8 +122,8 @@ class ScheduleApp:
             relx=0.5,
             rely=0.5,
             anchor="center",
-            width=980,
-            height=620
+            width=1120,
+            height=680
         )
 
         self.start_page = StartPage(self.container, self)
