@@ -65,9 +65,17 @@ class InputPage(tk.Frame):
         avoid_button_frame = tk.Frame(frame3, bg="#0b0b0b")
         avoid_button_frame.pack(anchor="w", padx=10, pady=5)
 
-        tk.Button(avoid_button_frame, text="新增", width=6, command=self.add_avoid).grid(row=0, column=0, padx=3)
-        tk.Button(avoid_button_frame, text="刪除", width=6, command=self.remove_avoid).grid(row=0, column=1, padx=3)
-        tk.Button(avoid_button_frame, text="更新名單", width=8, command=self.refresh_combobox).grid(row=0, column=2, padx=3)
+        add_btn = tk.Button(avoid_button_frame, text="新增", width=6, command=self.add_avoid)
+        add_btn.grid(row=0, column=0, padx=3)
+        self.add_hover_button_effect(add_btn)
+
+        delete_btn = tk.Button(avoid_button_frame, text="刪除", width=6, command=self.remove_avoid)
+        delete_btn.grid(row=0, column=1, padx=3)
+        self.add_hover_button_effect(delete_btn)
+
+        update_btn = tk.Button(avoid_button_frame, text="更新名單", width=8, command=self.refresh_combobox)
+        update_btn.grid(row=0, column=2, padx=3)
+        self.add_hover_button_effect(update_btn)
 
         self.avoid_listbox = tk.Listbox(frame3, height=7, width=30, font=("微軟正黑體", 10), bg="#050505", fg="#00ff26")
         self.avoid_listbox.pack(padx=10, pady=(5, 10))
@@ -75,8 +83,13 @@ class InputPage(tk.Frame):
         button_frame = tk.Frame(self, bg="black")
         button_frame.pack(pady=12)
 
-        tk.Button(button_frame, text="儲存人員", width=12, command=self.save).grid(row=0, column=0, padx=10)
-        tk.Button(button_frame, text="產生排班表", width=14, command=self.run).grid(row=0, column=1, padx=10)
+        save_btn = tk.Button(button_frame, text="儲存人員", width=12, command=self.save)
+        save_btn.grid(row=0, column=0, padx=10)
+        self.add_hover_button_effect(save_btn)
+
+        run_btn = tk.Button(button_frame, text="產生排班表", width=14, command=self.run)
+        run_btn.grid(row=0, column=1, padx=10)
+        self.add_hover_button_effect(run_btn)
 
         tk.Label(
             self,
@@ -89,11 +102,54 @@ class InputPage(tk.Frame):
         self.load()
         self.refresh_combobox()
 
+    def add_hover_button_effect(self, button):
+        normal_font = ("微軟正黑體", 9)
+        hover_font = ("微軟正黑體", 11, "bold")
+
+        button.config(
+            font=normal_font,
+            bg="#101010",
+            fg="#00ff26",
+            activebackground="#00ff26",
+            activeforeground="black",
+            relief="raised",
+            bd=2
+        )
+
+        button.bind("<Enter>", lambda e: button.config(
+            font=hover_font,
+            bg="#00ff26",
+            fg="black",
+            relief="sunken"
+        ))
+
+        button.bind("<Leave>", lambda e: button.config(
+            font=normal_font,
+            bg="#101010",
+            fg="#00ff26",
+            relief="raised"
+        ))
+
     def create_box(self, parent, title, subtitle, column):
-        box = tk.LabelFrame(
-            parent,
+        outer = tk.Frame(parent, bg="black")
+        outer.grid(row=0, column=column, padx=12, sticky="n")
+
+        header = tk.Button(
+            outer,
             text=f"【{title}】",
             font=("微軟正黑體", 11, "bold"),
+            bg="#101010",
+            fg="#00ff26",
+            activebackground="#00ff26",
+            activeforeground="black",
+            width=22,
+            command=lambda: self.toggle_box(header, content, title)
+        )
+        header.pack(anchor="w")
+
+        content = tk.LabelFrame(
+            outer,
+            text="",
             bg="#0b0b0b",
             fg="#00ff26",
             padx=8,
@@ -101,17 +157,27 @@ class InputPage(tk.Frame):
             bd=2,
             relief="groove"
         )
-        box.grid(row=0, column=column, padx=12, sticky="n")
 
         tk.Label(
-            box,
+            content,
             text=subtitle,
             font=("微軟正黑體", 9),
             fg="#8cff8c",
             bg="#0b0b0b"
         ).pack(anchor="w", padx=10)
 
-        return box
+        content.pack_forget()
+
+        return content
+
+
+    def toggle_box(self, header, content, title):
+        if content.winfo_ismapped():
+            content.pack_forget()
+            header.config(text=f"▶【{title}】")
+        else:
+            content.pack(anchor="w", pady=5)
+            header.config(text=f"▼【{title}】")
 
     def get(self, box):
         return [

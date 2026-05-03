@@ -45,8 +45,11 @@ class Scheduler:
             data["mo"].append(self.pick(self.outdoor, d, self.ocount))
             data["so"].append(self.pick(self.outdoor, d, self.ocount))
             data["ao"].append(self.pick(self.outdoor, d, self.ocount))
-
+        if d.weekday() == 0:
             data["mi"].append(self.pick(self.indoor, d, self.icount))
+        else:
+            data["mi"].append("")
+
             data["ni"].append(self.pick(self.indoor, d, self.icount))
             data["ai"].append(self.pick(self.indoor, d, self.icount))
 

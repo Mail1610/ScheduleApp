@@ -57,6 +57,50 @@ class RainBackground:
         self.canvas.after(30, self.animate)
 
 
+class StartPage(tk.Frame):
+    def __init__(self, parent, app):
+        super().__init__(parent, bg="black")
+        self.app = app
+
+        self.title = tk.Label(
+            self,
+            text="糾察隊系統",
+            font=("微軟正黑體", 42, "bold"),
+            bg="black",
+            fg="#00ff26"
+        )
+        self.title.place(relx=0.5, rely=0.42, anchor="center")
+
+        self.hint = tk.Label(
+            self,
+            text="點擊任意位置進入系統",
+            font=("微軟正黑體", 14),
+            bg="black",
+            fg="#8cff8c"
+        )
+        self.hint.place(relx=0.5, rely=0.55, anchor="center")
+
+        self.bind("<Button-1>", lambda e: self.app.show_input_page())
+        self.title.bind("<Button-1>", lambda e: self.app.show_input_page())
+        self.hint.bind("<Button-1>", lambda e: self.app.show_input_page())
+
+        self.bind_hover_effect(self.title, 42, 48)
+
+    def bind_hover_effect(self, widget, normal_size, hover_size):
+        widget.bind(
+            "<Enter>",
+            lambda e: widget.config(
+                font=("微軟正黑體", hover_size, "bold")
+            )
+        )
+        widget.bind(
+            "<Leave>",
+            lambda e: widget.config(
+                font=("微軟正黑體", normal_size, "bold")
+            )
+        )
+
+
 class ScheduleApp:
     def __init__(self):
         self.root = tk.Tk()
@@ -82,11 +126,16 @@ class ScheduleApp:
             height=620
         )
 
+        self.start_page = StartPage(self.container, self)
         self.input_page = InputPage(self.container, self)
         self.schedule_page = SchedulePage(self.container, self)
 
+        self.start_page.place(relwidth=1, relheight=1)
         self.input_page.place(relwidth=1, relheight=1)
         self.schedule_page.place(relwidth=1, relheight=1)
+
+    def show_start_page(self):
+        self.start_page.tkraise()
 
     def show_input_page(self):
         self.input_page.tkraise()
@@ -96,7 +145,7 @@ class ScheduleApp:
         self.schedule_page.tkraise()
 
     def run(self):
-        self.show_input_page()
+        self.show_start_page()
         self.root.mainloop()
 
 
