@@ -25,21 +25,23 @@ def load():
                 save([], [], [])
                 return default_config()
 
-            data =  json.loads(content)
+            data = json.loads(content)
 
+            if "indoor" not in data:
+                data["indoor"] = []
+            if "outdoor" not in data:
+                data["outdoor"] = []
             if "flag" not in data:
                 data["flag"] = []
 
-
             return data
 
-
     except json.JSONDecodeError:
-        save([], [])
+        save([], [], [])
         return default_config()
 
 
-def save(indoor, outdoor):
+def save(indoor, outdoor, flag):
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump({
             "indoor": indoor,
