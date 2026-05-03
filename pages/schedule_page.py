@@ -164,7 +164,7 @@ class SchedulePage(tk.Frame):
             x=table_x,
             y=230,
             left_labels=["登　雲　樓　1", "登　雲　樓　2"],
-            row_keys=["ao", "ao"],
+            row_keys=["ao1", "ao2"],
             weekday_header=True
         )
 
@@ -178,7 +178,7 @@ class SchedulePage(tk.Frame):
                 "升　旗",
                 "降　旗"
             ],
-            row_keys=["ni", "ni", "mi", "ai"]
+            row_keys=["ni1", "ni2", "mi", "ai"]
         )
 
         back_btn = tk.Button(

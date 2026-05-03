@@ -37,30 +37,54 @@ class Scheduler:
 
         data = {
             "dates": dates,
-            "mo": [], "so": [], "ao": [],
-            "mi": [], "ni": [], "ai": []
+            "mo": [],
+            "so": [],
+            "ao1": [],
+            "ao2": [],
+            "mi": [],
+            "ni1": [],
+            "ni2": [],
+            "ai": []
         }
 
         last_day = dates[-1]
 
         for d in dates:
-            # 外勤
-            data["mo"].append(self.pick(self.outdoor, d, self.ocount))
-            data["so"].append(self.pick(self.outdoor, d, self.ocount))
-            data["ao"].append(self.pick(self.outdoor, d, self.ocount))
+            used_today = set()
 
-            # 升旗：只排星期一
+            def pick_once(people, count):
+                candidates = [
+                    p for p in people
+                    if self.can_use(p, d) and p not in used_today
+                ]
+
+                if not candidates:
+                    candidates = [p for p in people if self.can_use(p, d)]
+
+                if not candidates:
+                    return "無人"
+
+                candidates.sort(key=lambda x: (count[x], random.random()))
+                p = candidates[0]
+                count[p] += 1
+                used_today.add(p)
+                return p
+
+            data["mo"].append(pick_once(self.outdoor, self.ocount))
+            data["so"].append(pick_once(self.outdoor, self.ocount))
+            data["ao1"].append(pick_once(self.outdoor, self.ocount))
+            data["ao2"].append(pick_once(self.outdoor, self.ocount))
+
+            data["ni1"].append(pick_once(self.indoor, self.icount))
+            data["ni2"].append(pick_once(self.indoor, self.icount))
+
             if d == dates[0]:
-                data["mi"].append(self.pick(self.indoor, d, self.icount))
+                data["mi"].append(pick_once(self.indoor, self.icount))
             else:
                 data["mi"].append("")
 
-            # 中午：每天排
-            data["ni"].append(self.pick(self.indoor, d, self.icount))
-
-            # 降旗：星期五，或排班區間最後一天
             if d.weekday() == 4 or d == last_day:
-                data["ai"].append(self.pick(self.indoor, d, self.icount))
+                data["ai"].append(pick_once(self.indoor, self.icount))
             else:
                 data["ai"].append("")
 
