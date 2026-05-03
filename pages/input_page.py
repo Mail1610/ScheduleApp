@@ -1,47 +1,9 @@
 import tkinter as tk
-import random
 from tkinter import messagebox, ttk
 from tkcalendar import DateEntry
 from scheduler import Scheduler
 import config_manager
 from collections import defaultdict
-
-class RainLayer:
-    def __init__(self, canvas, width=1120, height=680):
-        self.canvas = canvas
-        self.width = width
-        self.height = height
-        self.drops = []
-
-        for _ in range(80):
-            self.drops.append({
-                "x": random.randint(0, width),
-                "y": random.randint(-height, height),
-                "length": random.randint(60, 160),
-                "speed": random.randint(6, 15),
-                "line_width": random.choice([2, 3])
-            })
-
-        self.animate()
-
-    def animate(self):
-        self.canvas.delete("rain")
-
-        for drop in self.drops:
-            x = drop["x"]
-            y = drop["y"]
-            length = drop["length"]
-
-            self.canvas.create_line(x, y, x, y + length, fill="#003b00", width=drop["line_width"] + 6, tags="rain")
-            self.canvas.create_line(x, y, x, y + length, fill="#00ff26", width=drop["line_width"], tags="rain")
-
-            drop["y"] += drop["speed"]
-
-            if drop["y"] > self.height:
-                drop["y"] = random.randint(-400, -50)
-                drop["x"] = random.randint(0, self.width)
-
-        self.canvas.after(35, self.animate)
 
 
 class InputPage(tk.Frame):
@@ -49,12 +11,6 @@ class InputPage(tk.Frame):
         super().__init__(parent, bg="black")
         self.app = app
 
-        # ✅ 背景動畫 Canvas
-        self.bg_canvas = tk.Canvas(self, bg="black", highlightthickness=0)
-        self.bg_canvas.place(x=0, y=0, relwidth=1, relheight=1)
-
-        # ✅ 啟動雨動畫
-        self.rain_layer = RainLayer(self.bg_canvas, 1150, 760)
         self.open_box = None
         self.open_header = None
         self.open_title = None
@@ -91,6 +47,9 @@ class InputPage(tk.Frame):
 
         main_frame = tk.Frame(self, bg="black")
         main_frame.pack(pady=15)
+
+        for i in range(4):
+            main_frame.grid_columnconfigure(i, minsize=240, weight=1)
 
         frame1 = self.create_box(main_frame, "內勤人員", "一行一個名字", 0)
         self.indoor = tk.Text(frame1, height=7, width=28, font=("微軟正黑體", 10), bg="#050505", fg="#00ff26", insertbackground="#00ff26")
@@ -184,7 +143,7 @@ class InputPage(tk.Frame):
 
     def create_box(self, parent, title, subtitle, column):
         outer = tk.Frame(parent, bg="black")
-        outer.grid(row=0, column=column, padx=12, sticky="n")
+        outer.grid(row=0, column=column, padx=8, sticky="nsew")
 
         header = tk.Button(
             outer,
@@ -194,10 +153,10 @@ class InputPage(tk.Frame):
             fg="#00ff26",
             activebackground="#00ff26",
             activeforeground="black",
-            width=22,
+            width=20,
             command=lambda: self.toggle_box(header, content, title)
         )
-        header.pack(anchor="w")
+        header.pack(anchor="center")
 
         content = tk.LabelFrame(
             outer,
