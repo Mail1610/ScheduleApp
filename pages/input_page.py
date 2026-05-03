@@ -52,17 +52,21 @@ class InputPage(tk.Frame):
         self.outdoor = tk.Text(frame2, height=7, width=28, font=("微軟正黑體", 10), bg="#050505", fg="#00ff26", insertbackground="#00ff26")
         self.outdoor.pack(padx=10, pady=(5, 10))
 
-        frame3 = self.create_box(main_frame, "指定不排班", "新增後才會生效", 2)
+        frame3 = self.create_box(main_frame, "升旗人員", "只有這些人會排升旗", 2)
+        self.flag = tk.Text( frame3, height=7,width=22,font=("微軟正黑體", 10),bg="#050505",  fg="#00ff26",insertbackground="#00ff26" )
+        self.flag.pack(padx=10, pady=(5, 10))
 
-        tk.Label(frame3, text="選擇人員：", font=("微軟正黑體", 9), bg="#0b0b0b", fg="white").pack(anchor="w", padx=10)
-        self.avoid_person = ttk.Combobox(frame3, width=22, state="readonly")
+        frame4 = self.create_box(main_frame, "指定不排班", "新增後才會生效", 3)
+
+        tk.Label(frame4, text="選擇人員：", font=("微軟正黑體", 9), bg="#0b0b0b", fg="white").pack(anchor="w", padx=10)
+        self.avoid_person = ttk.Combobox(frame4, width=22, state="readonly")
         self.avoid_person.pack(anchor="w", padx=10, pady=3)
 
-        tk.Label(frame3, text="選擇日期：", font=("微軟正黑體", 9), bg="#0b0b0b", fg="white").pack(anchor="w", padx=10)
-        self.avoid_date = DateEntry(frame3, width=12)
+        tk.Label(frame4, text="選擇日期：", font=("微軟正黑體", 9), bg="#0b0b0b", fg="white").pack(anchor="w", padx=10)
+        self.avoid_date = DateEntry(frame4, width=12)
         self.avoid_date.pack(anchor="w", padx=10, pady=3)
 
-        avoid_button_frame = tk.Frame(frame3, bg="#0b0b0b")
+        avoid_button_frame = tk.Frame(frame4, bg="#0b0b0b")
         avoid_button_frame.pack(anchor="w", padx=10, pady=5)
 
         add_btn = tk.Button(avoid_button_frame, text="新增", width=6, command=self.add_avoid)
@@ -77,7 +81,7 @@ class InputPage(tk.Frame):
         update_btn.grid(row=0, column=2, padx=3)
         self.add_hover_button_effect(update_btn)
 
-        self.avoid_listbox = tk.Listbox(frame3, height=7, width=30, font=("微軟正黑體", 10), bg="#050505", fg="#00ff26")
+        self.avoid_listbox = tk.Listbox(frame4, height=7, width=30, font=("微軟正黑體", 10), bg="#050505", fg="#00ff26")
         self.avoid_listbox.pack(padx=10, pady=(5, 10))
 
         button_frame = tk.Frame(self, bg="black")
@@ -189,15 +193,17 @@ class InputPage(tk.Frame):
     def save(self):
         config_manager.save(
             self.get(self.indoor),
-            self.get(self.outdoor)
+            self.get(self.outdoor),
+            self.get(self.flag)
         )
         self.refresh_combobox()
-        messagebox.showinfo("OK", "已儲存")
+        messagebox.showinfo("OK", "已儲存A")
 
     def load(self):
         c = config_manager.load()
         self.indoor.insert("1.0", "\n".join(c["indoor"]))
         self.outdoor.insert("1.0", "\n".join(c["outdoor"]))
+        self.flag.insert("1.0", "\n".join(c.get("flag", [])))
 
     def refresh_combobox(self):
         people = self.get(self.indoor) + self.get(self.outdoor)
