@@ -41,16 +41,27 @@ class Scheduler:
             "mi": [], "ni": [], "ai": []
         }
 
+        last_day = dates[-1]
+
         for d in dates:
+            # 外勤
             data["mo"].append(self.pick(self.outdoor, d, self.ocount))
             data["so"].append(self.pick(self.outdoor, d, self.ocount))
             data["ao"].append(self.pick(self.outdoor, d, self.ocount))
-        if d.weekday() == 0:
-            data["mi"].append(self.pick(self.indoor, d, self.icount))
-        else:
-            data["mi"].append("")
 
+            # 升旗：只排星期一
+            if d == dates[0]:
+                data["mi"].append(self.pick(self.indoor, d, self.icount))
+            else:
+                data["mi"].append("")
+
+            # 中午：每天排
             data["ni"].append(self.pick(self.indoor, d, self.icount))
-            data["ai"].append(self.pick(self.indoor, d, self.icount))
+
+            # 降旗：星期五，或排班區間最後一天
+            if d.weekday() == 4 or d == last_day:
+                data["ai"].append(self.pick(self.indoor, d, self.icount))
+            else:
+                data["ai"].append("")
 
         return data
