@@ -8,13 +8,14 @@ def default_config():
     return {
         "indoor": [],
         "outdoor": [],
-        "flag": []
+        "no_flag": [],
+        "no_morning_outdoor": []
     }
 
 
 def load():
     if not os.path.exists(CONFIG_FILE):
-        save([], [], [])
+        save([], [], [], [])
         return default_config()
 
     try:
@@ -22,29 +23,28 @@ def load():
             content = f.read().strip()
 
             if not content:
-                save([], [], [])
+                save([], [], [], [])
                 return default_config()
 
             data = json.loads(content)
 
-            if "indoor" not in data:
-                data["indoor"] = []
-            if "outdoor" not in data:
-                data["outdoor"] = []
-            if "flag" not in data:
-                data["flag"] = []
+            data.setdefault("indoor", [])
+            data.setdefault("outdoor", [])
+            data.setdefault("no_flag", [])
+            data.setdefault("no_morning_outdoor", [])
 
             return data
 
     except json.JSONDecodeError:
-        save([], [], [])
+        save([], [], [], [])
         return default_config()
 
 
-def save(indoor, outdoor, flag):
+def save(indoor, outdoor, no_flag, no_morning_outdoor):
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump({
             "indoor": indoor,
             "outdoor": outdoor,
-            "flag": flag
+            "no_flag": no_flag,
+            "no_morning_outdoor": no_morning_outdoor
         }, f, ensure_ascii=False, indent=4)

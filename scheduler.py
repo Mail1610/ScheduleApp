@@ -4,10 +4,13 @@ import random
 
 
 class Scheduler:
-    def __init__(self, indoor, outdoor, avoid_map):
+    def __init__(self, indoor, outdoor, avoid_map, no_flag=None, no_morning_outdoor=None):
         self.indoor = indoor
         self.outdoor = outdoor
         self.avoid = avoid_map
+
+        self.no_flag = set(no_flag or [])
+        self.no_morning_outdoor = set(no_morning_outdoor or [])
 
         self.icount = defaultdict(int)
         self.ocount = defaultdict(int)
@@ -51,15 +54,24 @@ class Scheduler:
 
         for d in dates:
             used_today = set()
+            flag_person_today = None
 
-            def pick_once(people, count):
+            def pick_once(people, count, exclude_names=None, allow_repeat=False):
+                exclude_names = exclude_names or set()
+
                 candidates = [
                     p for p in people
-                    if self.can_use(p, d) and p not in used_today
+                    if self.can_use(p, d)
+                       and p not in exclude_names
+                       and (allow_repeat or p not in used_today)
                 ]
 
                 if not candidates:
-                    candidates = [p for p in people if self.can_use(p, d)]
+                    candidates = [
+                        p for p in people
+                        if self.can_use(p, d)
+                           and p not in exclude_names
+                    ]
 
                 if not candidates:
                     return "無人"
@@ -67,24 +79,52 @@ class Scheduler:
                 candidates.sort(key=lambda x: (count[x], random.random()))
                 p = candidates[0]
                 count[p] += 1
-                used_today.add(p)
+
+                if not allow_repeat:
+                    used_today.add(p)
+
                 return p
 
-            data["mo"].append(pick_once(self.outdoor, self.ocount))
-            data["so"].append(pick_once(self.outdoor, self.ocount))
-            data["ao1"].append(pick_once(self.outdoor, self.ocount))
-            data["ao2"].append(pick_once(self.outdoor, self.ocount))
+            # 上午外勤：排除「早上不能站外勤」的人
+            data["mo"].append(
+                pick_once(self.outdoor, self.ocount, self.no_morning_outdoor)
+            )
 
-            data["ni1"].append(pick_once(self.indoor, self.icount))
-            data["ni2"].append(pick_once(self.indoor, self.icount))
+            # 第七節外勤
+            data["so"].append(
+                pick_once(self.outdoor, self.ocount)
+            )
 
+            # 下午外勤兩格
+            data["ao1"].append(
+                pick_once(self.outdoor, self.ocount)
+            )
+            data["ao2"].append(
+                pick_once(self.outdoor, self.ocount)
+            )
+
+            # 升旗：每次排班第一天，排除「不能升旗的人」
             if d == dates[0]:
-                data["mi"].append(pick_once(self.indoor, self.icount))
+                flag_person_today = pick_once(self.indoor, self.icount, self.no_flag)
+                data["mi"].append(flag_person_today)
             else:
                 data["mi"].append("")
 
+            # 發資料、寫白板
+            # 如果是升旗那個人，允許跟發資料/寫白板重複
+            data["ni1"].append(
+                pick_once(self.indoor, self.icount, allow_repeat=False)
+            )
+
+            data["ni2"].append(
+                pick_once(self.indoor, self.icount, allow_repeat=False)
+            )
+
+            # 降旗：星期五或最後一天
             if d.weekday() == 4 or d == last_day:
-                data["ai"].append(pick_once(self.indoor, self.icount))
+                data["ai"].append(
+                    pick_once(self.indoor, self.icount)
+                )
             else:
                 data["ai"].append("")
 

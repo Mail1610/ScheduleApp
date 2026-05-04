@@ -59,9 +59,19 @@ class InputPage(tk.Frame):
         self.outdoor = tk.Text(frame2, height=7, width=28, font=("微軟正黑體", 10), bg="#050505", fg="#00ff26", insertbackground="#00ff26")
         self.outdoor.pack(padx=10, pady=(5, 10))
 
-        frame3 = self.create_box(main_frame, "升旗人員", "只有這些人會排升旗", 2)
-        self.flag = tk.Text( frame3, height=7,width=22,font=("微軟正黑體", 10),bg="#050505",  fg="#00ff26",insertbackground="#00ff26" )
-        self.flag.pack(padx=10, pady=(5, 10))
+        frame3 = self.create_box(main_frame, "限制條件", "設定特殊限制", 2)
+
+        tk.Label(frame3, text="【不能升旗人員】", font=("微軟正黑體", 9, "bold"), bg="#0b0b0b", fg="#00ff26").pack(
+            anchor="w", padx=10)
+        self.no_flag = tk.Text(frame3, height=4, width=24, font=("微軟正黑體", 10), bg="#050505", fg="#00ff26",
+                               insertbackground="#00ff26")
+        self.no_flag.pack(padx=10, pady=(3, 8))
+
+        tk.Label(frame3, text="【早上不能外勤】", font=("微軟正黑體", 9, "bold"), bg="#0b0b0b", fg="#00ff26").pack(
+            anchor="w", padx=10)
+        self.no_morning_outdoor = tk.Text(frame3, height=4, width=24, font=("微軟正黑體", 10), bg="#050505",
+                                          fg="#00ff26", insertbackground="#00ff26")
+        self.no_morning_outdoor.pack(padx=10, pady=(3, 10))
 
         frame4 = self.create_box(main_frame, "指定不排班", "新增後才會生效", 3)
 
@@ -215,7 +225,8 @@ class InputPage(tk.Frame):
         config_manager.save(
             self.get(self.indoor),
             self.get(self.outdoor),
-            self.get(self.flag)
+            self.get(self.no_flag),
+            self.get(self.no_morning_outdoor)
         )
         self.refresh_combobox()
         messagebox.showinfo("OK", "已儲存A")
@@ -224,7 +235,9 @@ class InputPage(tk.Frame):
         c = config_manager.load()
         self.indoor.insert("1.0", "\n".join(c["indoor"]))
         self.outdoor.insert("1.0", "\n".join(c["outdoor"]))
-        self.flag.insert("1.0", "\n".join(c.get("flag", [])))
+        self.no_flag.insert("1.0", "\n".join(c.get("no_flag", [])))
+        self.no_morning_outdoor.insert("1.0", "\n".join(c.get("no_morning_outdoor", [])))
+
 
     def refresh_combobox(self):
         people = self.get(self.indoor) + self.get(self.outdoor)
@@ -298,7 +311,7 @@ class InputPage(tk.Frame):
             messagebox.showerror("錯誤", "最多 5 天")
             return
 
-        sch = Scheduler(indoor, outdoor, self.parse_avoid())
+        sch = Scheduler(indoor, outdoor, self.parse_avoid(), self.get(self.no_flag), self.get(self.no_morning_outdoor))
         data = sch.generate(self.start.get_date(), days)
 
         self.app.show_schedule_page(data)
