@@ -31,23 +31,19 @@ class RainBackground:
             length = drop["length"]
 
             self.canvas.create_line(
-                x, y,
-                x, y + length,
+                x, y, x, y + length,
                 fill="#003b00",
                 width=drop["line_width"] + 7,
                 tags="rain"
             )
-
             self.canvas.create_line(
-                x, y,
-                x, y + length,
+                x, y, x, y + length,
                 fill="#00ff26",
                 width=drop["line_width"],
                 tags="rain"
             )
 
             drop["y"] += drop["speed"]
-
             if drop["y"] > self.height:
                 drop["y"] = random.randint(-500, -50)
                 drop["x"] = random.randint(0, self.width)
@@ -57,50 +53,6 @@ class RainBackground:
         self.canvas.after(30, self.animate)
 
 
-class StartPage(tk.Frame):
-    def __init__(self, parent, app):
-        super().__init__(parent, bg="black")
-        self.app = app
-
-        self.title = tk.Label(
-            self,
-            text="糾察隊系統",
-            font=("微軟正黑體", 42, "bold"),
-            bg="black",
-            fg="#00ff26"
-        )
-        self.title.place(relx=0.5, rely=0.42, anchor="center")
-
-        self.hint = tk.Label(
-            self,
-            text="點擊任意位置進入系統",
-            font=("微軟正黑體", 14),
-            bg="black",
-            fg="#8cff8c"
-        )
-        self.hint.place(relx=0.5, rely=0.55, anchor="center")
-
-        self.bind("<Button-1>", lambda e: self.app.show_input_page())
-        self.title.bind("<Button-1>", lambda e: self.app.show_input_page())
-        self.hint.bind("<Button-1>", lambda e: self.app.show_input_page())
-
-        self.bind_hover_effect(self.title, 42, 48)
-
-    def bind_hover_effect(self, widget, normal_size, hover_size):
-        widget.bind(
-            "<Enter>",
-            lambda e: widget.config(
-                font=("微軟正黑體", hover_size, "bold")
-            )
-        )
-        widget.bind(
-            "<Leave>",
-            lambda e: widget.config(
-                font=("微軟正黑體", normal_size, "bold")
-            )
-        )
-
-
 class ScheduleApp:
     def __init__(self):
         self.root = tk.Tk()
@@ -108,41 +60,55 @@ class ScheduleApp:
         self.root.geometry("1150x760")
         self.root.configure(bg="black")
 
-        self.bg_canvas = tk.Canvas(
-            self.root,
-            bg="black",
-            highlightthickness=0
-        )
+        self.bg_canvas = tk.Canvas(self.root, bg="black", highlightthickness=0)
         self.bg_canvas.place(x=0, y=0, relwidth=1, relheight=1)
 
         self.rain_background = RainBackground(self.bg_canvas, 1150, 760)
 
-        self.container = tk.Frame(self.root, bg="black")
-        self.container.place(
-            relx=0.5,
-            rely=0.5,
-            anchor="center",
-            width=1120,
-            height=680
+        self._setup_start_page()
+        self.input_page = InputPage(self.bg_canvas, self)
+        self.schedule_page = SchedulePage(self.bg_canvas, self)
+
+    def _setup_start_page(self):
+        c = self.bg_canvas
+        # 隱形全螢幕點擊區（stipple 讓它不遮住雨）
+        self._start_overlay = c.create_rectangle(
+            0, 0, 1150, 760,
+            fill="black", stipple="gray12", outline="",
+            tags="start_page"
         )
-
-        self.start_page = StartPage(self.container, self)
-        self.input_page = InputPage(self.container, self)
-        self.schedule_page = SchedulePage(self.container, self)
-
-        self.start_page.place(relwidth=1, relheight=1)
-        self.input_page.place(relwidth=1, relheight=1)
-        self.schedule_page.place(relwidth=1, relheight=1)
+        self._start_title = c.create_text(
+            575, 320, text="糾察隊系統",
+            font=("微軟正黑體", 58, "bold"),
+            fill="#00ff26", tags="start_page"
+        )
+        c.create_text(
+            575, 430, text="點擊任意位置進入系統",
+            font=("微軟正黑體", 20),
+            fill="#8cff8c", tags="start_page"
+        )
+        c.tag_bind("start_page", "<Button-1>", lambda e: self.show_input_page())
+        c.tag_bind(self._start_title, "<Enter>",
+                   lambda e: c.itemconfigure(self._start_title,
+                                             font=("微軟正黑體", 66, "bold")))
+        c.tag_bind(self._start_title, "<Leave>",
+                   lambda e: c.itemconfigure(self._start_title,
+                                             font=("微軟正黑體", 58, "bold")))
 
     def show_start_page(self):
-        self.start_page.tkraise()
+        self.bg_canvas.itemconfigure("start_page", state="normal")
+        self.input_page.hide()
+        self.schedule_page.hide()
 
     def show_input_page(self):
-        self.input_page.tkraise()
+        self.bg_canvas.itemconfigure("start_page", state="hidden")
+        self.input_page.show()
+        self.schedule_page.hide()
 
     def show_schedule_page(self, data):
-        self.schedule_page.render(data)
-        self.schedule_page.tkraise()
+        self.bg_canvas.itemconfigure("start_page", state="hidden")
+        self.input_page.hide()
+        self.schedule_page.show(data)
 
     def run(self):
         self.show_start_page()

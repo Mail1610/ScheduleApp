@@ -5,231 +5,198 @@ from scheduler import Scheduler
 import config_manager
 from collections import defaultdict
 
+COL_XS = [150, 430, 710, 990]
+COL_TITLES = ["內勤人員", "外勤人員", "限制條件", "指定不排班"]
 
-class InputPage(tk.Frame):
-    def __init__(self, parent, app):
-        super().__init__(parent, bg="black")
+
+class InputPage:
+    def __init__(self, canvas, app):
+        self.canvas = canvas
         self.app = app
+        self._ids = []
+        self._wins = []
+        self._col_content = [[], [], [], []]
+        self._header_btns = []
+        self._open_col = None
 
-        self.open_box = None
-        self.open_header = None
-        self.open_title = None
+        c = canvas
 
-        tk.Label(
-            self,
-            text="糾察隊排班系統",
-            font=("微軟正黑體", 24, "bold"),
-            bg="black",
-            fg="#00ff26"
-        ).pack(pady=(25, 10))
+        self._ids.append(c.create_text(
+            575, 35, text="糾察隊排班系統",
+            font=("微軟正黑體", 24, "bold"), fill="#00ff26"))
 
-        top_frame = tk.LabelFrame(
-            self,
-            text="排班設定",
-            font=("微軟正黑體", 11, "bold"),
-            bg="#0b0b0b",
-            fg="#00ff26",
-            padx=20,
-            pady=12,
-            bd=2,
-            relief="groove"
-        )
-        top_frame.pack(pady=10)
+        self._ids.append(c.create_text(
+            575, 65, text="━━━━━━━━【 排班設定 】━━━━━━━━",
+            font=("微軟正黑體", 11, "bold"), fill="#00ff26"))
 
-        tk.Label(top_frame, text="起始日期：", font=("微軟正黑體", 10), bg="#0b0b0b", fg="white").grid(row=0, column=0, padx=8)
-        self.start = DateEntry(top_frame, width=12)
-        self.start.grid(row=0, column=1, padx=8)
+        self._ids.append(c.create_text(
+            360, 95, text="起始日期：",
+            font=("微軟正黑體", 10), fill="white"))
+        self.start = DateEntry(c, width=12)
+        self._wins.append(c.create_window(435, 95, window=self.start))
 
-        tk.Label(top_frame, text="天數：", font=("微軟正黑體", 10), bg="#0b0b0b", fg="white").grid(row=0, column=2, padx=8)
-        self.days = tk.Entry(top_frame, width=6)
+        self._ids.append(c.create_text(
+            545, 95, text="天數：",
+            font=("微軟正黑體", 10), fill="white"))
+        self.days = tk.Entry(c, width=6, bg="black", fg="#00ff26",
+                             insertbackground="#00ff26")
         self.days.insert(0, "5")
-        self.days.grid(row=0, column=3, padx=8)
+        self._wins.append(c.create_window(595, 95, window=self.days))
 
-        main_frame = tk.Frame(self, bg="black")
-        main_frame.pack(pady=15)
+        for i, (cx, title) in enumerate(zip(COL_XS, COL_TITLES)):
+            btn = tk.Button(c, text=f"━━【{title}】━━",
+                            font=("微軟正黑體", 15, "bold"),
+                            bg="black", fg="#00ff26",
+                            activebackground="#00ff26", activeforeground="black",
+                            relief="flat", bd=0, width=14,
+                            command=lambda i=i: self._toggle_col(i))
+            self._header_btns.append(btn)
+            self._wins.append(c.create_window(cx, 130, window=btn))
 
-        for i in range(4):
-            main_frame.grid_columnconfigure(i, minsize=240, weight=1)
+        self._setup_col0()
+        self._setup_col1()
+        self._setup_col2()
+        self._setup_col3()
 
-        frame1 = self.create_box(main_frame, "內勤人員", "一行一個名字", 0)
-        self.indoor = tk.Text(frame1, height=7, width=28, font=("微軟正黑體", 10), bg="#050505", fg="#00ff26", insertbackground="#00ff26")
-        self.indoor.pack(padx=10, pady=(5, 10))
+        save_btn = tk.Button(c, text="儲存人員", width=12, command=self.save)
+        self._style_btn(save_btn)
+        self._wins.append(c.create_window(490, 710, window=save_btn))
 
-        frame2 = self.create_box(main_frame, "外勤人員", "一行一個名字", 1)
-        self.outdoor = tk.Text(frame2, height=7, width=28, font=("微軟正黑體", 10), bg="#050505", fg="#00ff26", insertbackground="#00ff26")
-        self.outdoor.pack(padx=10, pady=(5, 10))
+        run_btn = tk.Button(c, text="產生排班表", width=14, command=self.run)
+        self._style_btn(run_btn)
+        self._wins.append(c.create_window(640, 710, window=run_btn))
 
-        frame3 = self.create_box(main_frame, "限制條件", "設定特殊限制", 2)
-
-        tk.Label(frame3, text="【不能升旗人員】", font=("微軟正黑體", 9, "bold"), bg="#0b0b0b", fg="#00ff26").pack(
-            anchor="w", padx=10)
-        self.no_flag = tk.Text(frame3, height=4, width=24, font=("微軟正黑體", 10), bg="#050505", fg="#00ff26",
-                               insertbackground="#00ff26")
-        self.no_flag.pack(padx=10, pady=(3, 8))
-
-        tk.Label(frame3, text="【早上不能外勤】", font=("微軟正黑體", 9, "bold"), bg="#0b0b0b", fg="#00ff26").pack(
-            anchor="w", padx=10)
-        self.no_morning_outdoor = tk.Text(frame3, height=4, width=24, font=("微軟正黑體", 10), bg="#050505",
-                                          fg="#00ff26", insertbackground="#00ff26")
-        self.no_morning_outdoor.pack(padx=10, pady=(3, 10))
-
-        frame4 = self.create_box(main_frame, "指定不排班", "新增後才會生效", 3)
-
-        tk.Label(frame4, text="選擇人員：", font=("微軟正黑體", 9), bg="#0b0b0b", fg="white").pack(anchor="w", padx=10)
-        self.avoid_person = ttk.Combobox(frame4, width=22, state="readonly")
-        self.avoid_person.pack(anchor="w", padx=10, pady=3)
-
-        tk.Label(frame4, text="選擇日期：", font=("微軟正黑體", 9), bg="#0b0b0b", fg="white").pack(anchor="w", padx=10)
-        self.avoid_date = DateEntry(frame4, width=12)
-        self.avoid_date.pack(anchor="w", padx=10, pady=3)
-
-        avoid_button_frame = tk.Frame(frame4, bg="#0b0b0b")
-        avoid_button_frame.pack(anchor="w", padx=10, pady=5)
-
-        add_btn = tk.Button(avoid_button_frame, text="新增", width=6, command=self.add_avoid)
-        add_btn.grid(row=0, column=0, padx=3)
-        self.add_hover_button_effect(add_btn)
-
-        delete_btn = tk.Button(avoid_button_frame, text="刪除", width=6, command=self.remove_avoid)
-        delete_btn.grid(row=0, column=1, padx=3)
-        self.add_hover_button_effect(delete_btn)
-
-        update_btn = tk.Button(avoid_button_frame, text="更新名單", width=8, command=self.refresh_combobox)
-        update_btn.grid(row=0, column=2, padx=3)
-        self.add_hover_button_effect(update_btn)
-
-        self.avoid_listbox = tk.Listbox(frame4, height=7, width=30, font=("微軟正黑體", 10), bg="#050505", fg="#00ff26")
-        self.avoid_listbox.pack(padx=10, pady=(5, 10))
-
-        button_frame = tk.Frame(self, bg="black")
-        button_frame.pack(pady=12)
-
-        save_btn = tk.Button(button_frame, text="儲存人員", width=12, command=self.save)
-        save_btn.grid(row=0, column=0, padx=10)
-        self.add_hover_button_effect(save_btn)
-
-        run_btn = tk.Button(button_frame, text="產生排班表", width=14, command=self.run)
-        run_btn.grid(row=0, column=1, padx=10)
-        self.add_hover_button_effect(run_btn)
-
-        tk.Label(
-            self,
+        self._ids.append(c.create_text(
+            575, 740,
             text="※ 修改人員名單後，請按「儲存人員」或「更新名單」；排班天數最多 5 天。",
-            font=("微軟正黑體", 9),
-            fg="#00ff26",
-            bg="black"
-        ).pack(pady=5)
+            font=("微軟正黑體", 9), fill="#8cff8c"))
+
+        for col_ids in self._col_content:
+            for wid in col_ids:
+                c.itemconfigure(wid, state="hidden")
 
         self.load()
         self.refresh_combobox()
 
-    def add_hover_button_effect(self, button):
-        normal_font = ("微軟正黑體", 9)
-        hover_font = ("微軟正黑體", 11, "bold")
+    def _setup_col0(self):
+        c, cx, col = self.canvas, COL_XS[0], 0
+        self._col_content[col].append(c.create_text(
+            cx, 162, text="一行一個名字",
+            font=("微軟正黑體", 9), fill="#8cff8c"))
+        self.indoor = tk.Text(c, height=7, width=18, font=("微軟正黑體", 14),
+                              bg="black", fg="#00ff26", insertbackground="#00ff26")
+        self._col_content[col].append(c.create_window(cx, 258, window=self.indoor))
 
-        button.config(
-            font=normal_font,
-            bg="#101010",
-            fg="#00ff26",
-            activebackground="#00ff26",
-            activeforeground="black",
-            relief="raised",
-            bd=2
-        )
+    def _setup_col1(self):
+        c, cx, col = self.canvas, COL_XS[1], 1
+        self._col_content[col].append(c.create_text(
+            cx, 162, text="一行一個名字",
+            font=("微軟正黑體", 9), fill="#8cff8c"))
+        self.outdoor = tk.Text(c, height=7, width=18, font=("微軟正黑體", 14),
+                               bg="black", fg="#00ff26", insertbackground="#00ff26")
+        self._col_content[col].append(c.create_window(cx, 258, window=self.outdoor))
 
-        button.bind("<Enter>", lambda e: button.config(
-            font=hover_font,
-            bg="#00ff26",
-            fg="black",
-            relief="sunken"
-        ))
+    def _setup_col2(self):
+        c, cx, col = self.canvas, COL_XS[2], 2
+        self._col_content[col].append(c.create_text(
+            cx, 162, text="【不能升旗人員】",
+            font=("微軟正黑體", 9, "bold"), fill="#00ff26"))
+        self.no_flag = tk.Text(c, height=4, width=18, font=("微軟正黑體", 14),
+                               bg="black", fg="#00ff26", insertbackground="#00ff26")
+        self._col_content[col].append(c.create_window(cx, 218, window=self.no_flag))
+        self._col_content[col].append(c.create_text(
+            cx, 282, text="【早上不能外勤】",
+            font=("微軟正黑體", 9, "bold"), fill="#00ff26"))
+        self.no_morning_outdoor = tk.Text(c, height=4, width=18,
+                                          font=("微軟正黑體", 14),
+                                          bg="black", fg="#00ff26",
+                                          insertbackground="#00ff26")
+        self._col_content[col].append(c.create_window(cx, 338, window=self.no_morning_outdoor))
 
-        button.bind("<Leave>", lambda e: button.config(
-            font=normal_font,
-            bg="#101010",
-            fg="#00ff26",
-            relief="raised"
-        ))
+    def _setup_col3(self):
+        c, cx, col = self.canvas, COL_XS[3], 3
+        self._col_content[col].append(c.create_text(
+            cx - 80, 162, text="選擇人員：",
+            font=("微軟正黑體", 9), fill="white", anchor="w"))
+        self.avoid_person = ttk.Combobox(c, width=20, state="readonly")
+        self._col_content[col].append(c.create_window(cx, 182, window=self.avoid_person))
+        self._col_content[col].append(c.create_text(
+            cx - 80, 210, text="選擇日期：",
+            font=("微軟正黑體", 9), fill="white", anchor="w"))
+        self.avoid_date = DateEntry(c, width=12)
+        self._col_content[col].append(c.create_window(cx, 228, window=self.avoid_date))
 
-    def create_box(self, parent, title, subtitle, column):
-        outer = tk.Frame(parent, bg="black")
-        outer.grid(row=0, column=column, padx=8, sticky="nsew")
+        add_btn = tk.Button(c, text="新增", width=6, command=self.add_avoid)
+        self._style_btn(add_btn)
+        self._col_content[col].append(c.create_window(cx - 75, 258, window=add_btn))
 
-        header = tk.Button(
-            outer,
-            text=f"【{title}】",
-            font=("微軟正黑體", 11, "bold"),
-            bg="#101010",
-            fg="#00ff26",
-            activebackground="#00ff26",
-            activeforeground="black",
-            width=20,
-            command=lambda: self.toggle_box(header, content, title)
-        )
-        header.pack(anchor="center")
+        del_btn = tk.Button(c, text="刪除", width=6, command=self.remove_avoid)
+        self._style_btn(del_btn)
+        self._col_content[col].append(c.create_window(cx, 258, window=del_btn))
 
-        content = tk.LabelFrame(
-            outer,
-            text="",
-            bg="#0b0b0b",
-            fg="#00ff26",
-            padx=8,
-            pady=8,
-            bd=2,
-            relief="groove"
-        )
+        upd_btn = tk.Button(c, text="更新名單", width=8, command=self.refresh_combobox)
+        self._style_btn(upd_btn)
+        self._col_content[col].append(c.create_window(cx + 85, 258, window=upd_btn))
 
-        tk.Label(
-            content,
-            text=subtitle,
-            font=("微軟正黑體", 9),
-            fg="#8cff8c",
-            bg="#0b0b0b"
-        ).pack(anchor="w", padx=10)
+        self.avoid_listbox = tk.Listbox(c, height=7, width=20,
+                                        font=("微軟正黑體", 14),
+                                        bg="black", fg="#00ff26")
+        self._col_content[col].append(c.create_window(cx, 375, window=self.avoid_listbox))
 
-        content.pack_forget()
+    def _style_btn(self, btn):
+        btn.config(font=("微軟正黑體", 9), bg="#101010", fg="#00ff26",
+                   activebackground="#00ff26", activeforeground="black",
+                   relief="raised", bd=2)
+        btn.bind("<Enter>", lambda e: btn.config(
+            font=("微軟正黑體", 11, "bold"), bg="#00ff26", fg="black", relief="sunken"))
+        btn.bind("<Leave>", lambda e: btn.config(
+            font=("微軟正黑體", 9), bg="#101010", fg="#00ff26", relief="raised"))
 
-        return content
+    def _toggle_col(self, col_idx):
+        title = COL_TITLES[col_idx]
+        btn = self._header_btns[col_idx]
 
-    def toggle_box(self, header, content, title):
-        # 如果點的是目前已打開的區塊，就關起來
-        if self.open_box == content and content.winfo_ismapped():
-            content.pack_forget()
-            header.config(text=f"▼【{title}】")
-            self.open_box = None
-            self.open_header = None
-            self.open_title = None
-            return
+        if self._open_col == col_idx:
+            for wid in self._col_content[col_idx]:
+                self.canvas.itemconfigure(wid, state="hidden")
+            btn.config(text=f"━━【{title}】━━")
+            self._open_col = None
+        else:
+            if self._open_col is not None:
+                prev_title = COL_TITLES[self._open_col]
+                for wid in self._col_content[self._open_col]:
+                    self.canvas.itemconfigure(wid, state="hidden")
+                self._header_btns[self._open_col].config(text=f"━━【{prev_title}】━━")
+            for wid in self._col_content[col_idx]:
+                self.canvas.itemconfigure(wid, state="normal")
+            btn.config(text=f"━━【{title}】━━ ▲")
+            self._open_col = col_idx
 
-        # 先關掉上一個已打開的區塊
-        if self.open_box is not None and self.open_box.winfo_ismapped():
-            self.open_box.pack_forget()
-            self.open_header.config(text=f"▼【{self.open_title}】")
+    def show(self):
+        for wid in self._ids + self._wins:
+            self.canvas.itemconfigure(wid, state="normal")
+        for ci, col_ids in enumerate(self._col_content):
+            state = "normal" if ci == self._open_col else "hidden"
+            for wid in col_ids:
+                self.canvas.itemconfigure(wid, state=state)
 
-        # 打開目前點選的區塊
-        content.pack(anchor="w", pady=5)
-        header.config(text=f"▲【{title}】")
-
-        self.open_box = content
-        self.open_header = header
-        self.open_title = title
+    def hide(self):
+        for wid in self._ids + self._wins:
+            self.canvas.itemconfigure(wid, state="hidden")
+        for col_ids in self._col_content:
+            for wid in col_ids:
+                self.canvas.itemconfigure(wid, state="hidden")
 
     def get(self, box):
-        return [
-            x.strip()
-            for x in box.get("1.0", "end").splitlines()
-            if x.strip()
-        ]
+        return [x.strip() for x in box.get("1.0", "end").splitlines() if x.strip()]
 
     def save(self):
         config_manager.save(
-            self.get(self.indoor),
-            self.get(self.outdoor),
-            self.get(self.no_flag),
-            self.get(self.no_morning_outdoor)
+            self.get(self.indoor), self.get(self.outdoor),
+            self.get(self.no_flag), self.get(self.no_morning_outdoor)
         )
         self.refresh_combobox()
-        messagebox.showinfo("OK", "已儲存A")
+        messagebox.showinfo("OK", "已儲存")
 
     def load(self):
         c = config_manager.load()
@@ -238,11 +205,9 @@ class InputPage(tk.Frame):
         self.no_flag.insert("1.0", "\n".join(c.get("no_flag", [])))
         self.no_morning_outdoor.insert("1.0", "\n".join(c.get("no_morning_outdoor", [])))
 
-
     def refresh_combobox(self):
         people = self.get(self.indoor) + self.get(self.outdoor)
         self.avoid_person["values"] = people
-
         if people:
             self.avoid_person.current(0)
         else:
@@ -251,67 +216,52 @@ class InputPage(tk.Frame):
     def add_avoid(self):
         name = self.avoid_person.get()
         date = self.avoid_date.get_date()
-
         if not name:
             messagebox.showerror("錯誤", "請先選擇人員")
             return
-
         text = f"{name},{date.month:02d}/{date.day:02d}"
-
         if text in self.avoid_listbox.get(0, tk.END):
             messagebox.showwarning("提醒", "這筆不排班已經存在")
             return
-
         self.avoid_listbox.insert(tk.END, text)
 
     def remove_avoid(self):
         selected = self.avoid_listbox.curselection()
-
         if not selected:
             messagebox.showwarning("提醒", "請先選擇要刪除的不排班項目")
             return
-
         self.avoid_listbox.delete(selected[0])
 
     def parse_avoid(self):
         m = defaultdict(set)
-
         for i in range(self.avoid_listbox.size()):
             line = self.avoid_listbox.get(i)
-
             if "," in line:
                 n, d = line.split(",", 1)
                 m[n.strip()].add(d.strip())
-
         return m
 
     def run(self):
         indoor = self.get(self.indoor)
         outdoor = self.get(self.outdoor)
-
         if not indoor:
             messagebox.showerror("錯誤", "請輸入內勤人員")
             return
-
         if not outdoor:
             messagebox.showerror("錯誤", "請輸入外勤人員")
             return
-
         try:
             days = int(self.days.get())
         except ValueError:
             messagebox.showerror("錯誤", "天數請輸入數字")
             return
-
         if days < 1:
             messagebox.showerror("錯誤", "天數至少 1 天")
             return
-
         if days > 5:
             messagebox.showerror("錯誤", "最多 5 天")
             return
-
-        sch = Scheduler(indoor, outdoor, self.parse_avoid(), self.get(self.no_flag), self.get(self.no_morning_outdoor))
+        sch = Scheduler(indoor, outdoor, self.parse_avoid(),
+                        self.get(self.no_flag), self.get(self.no_morning_outdoor))
         data = sch.generate(self.start.get_date(), days)
-
         self.app.show_schedule_page(data)
