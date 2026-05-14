@@ -4,13 +4,14 @@ import random
 
 
 class Scheduler:
-    def __init__(self, indoor, outdoor, avoid_map, no_flag=None, no_morning_outdoor=None):
+    def __init__(self, indoor, outdoor, avoid_map, no_flag=None, no_morning_outdoor=None, half_days=None):
         self.indoor = indoor
         self.outdoor = outdoor
         self.avoid = avoid_map
 
         self.no_flag = set(no_flag or [])
         self.no_morning_outdoor = set(no_morning_outdoor or [])
+        self.half_days = set(half_days or [])
 
         self.icount = defaultdict(int)
         self.ocount = defaultdict(int)
@@ -52,9 +53,10 @@ class Scheduler:
 
         last_day = dates[-1]
 
-        for d in dates:
+        for idx, d in enumerate(dates):
             used_today = set()
             flag_person_today = None
+            is_half_day = idx in self.half_days
 
             def pick_once(people, count, exclude_names=None, allow_repeat=False):
                 exclude_names = exclude_names or set()
@@ -90,10 +92,13 @@ class Scheduler:
                 pick_once(self.outdoor, self.ocount, self.no_morning_outdoor)
             )
 
-            # 第七節外勤
-            data["so"].append(
-                pick_once(self.outdoor, self.ocount)
-            )
+            # 第七節外勤（半天不排）
+            if is_half_day:
+                data["so"].append("半天")
+            else:
+                data["so"].append(
+                    pick_once(self.outdoor, self.ocount)
+                )
 
             # 下午外勤兩格
             data["ao1"].append(

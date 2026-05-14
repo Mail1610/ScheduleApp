@@ -10,12 +10,12 @@ class SchedulePage:
 
         back_btn = tk.Button(canvas, text="返回",
                              font=("微軟正黑體", 12, "bold"),
-                             bg="#101010", fg="#00ff26",
-                             activebackground="#00ff26", activeforeground="black",
+                             bg="#f0f0f0", fg="black",
+                             activebackground="#cccccc", activeforeground="black",
                              relief="raised", bd=2,
                              command=self.app.show_input_page)
-        back_btn.bind("<Enter>", lambda e: back_btn.config(bg="#00ff26", fg="black"))
-        back_btn.bind("<Leave>", lambda e: back_btn.config(bg="#101010", fg="#00ff26"))
+        back_btn.bind("<Enter>", lambda e: back_btn.config(bg="#cccccc"))
+        back_btn.bind("<Leave>", lambda e: back_btn.config(bg="#f0f0f0"))
         self._back_win = canvas.create_window(575, 710, window=back_btn)
         canvas.itemconfigure(self._back_win, state="hidden")
 
@@ -40,7 +40,8 @@ class SchedulePage:
             width=820,
             height=520,
             bg="white",
-            highlightthickness=0
+            highlightthickness=1,
+            highlightbackground="black"
         )
         self._table_canvas = table_canvas
         self._table_win = self.canvas.create_window(
@@ -50,7 +51,8 @@ class SchedulePage:
         table_canvas.create_text(
             410, 30,
             text="光復高中糾察隊",
-            font=("微軟正黑體", 13, "bold")
+            font=("微軟正黑體", 13, "bold"),
+            fill="black"
         )
 
         dates = data["dates"]
@@ -70,7 +72,8 @@ class SchedulePage:
             table_canvas.create_text(
                 x + 300, y - 14,
                 text=title,
-                font=("微軟正黑體", 11, "bold")
+                font=("微軟正黑體", 11, "bold"),
+                fill="black"
             )
 
             left_w, col_w, row_h, header_h = 105, 78, 28, 28
@@ -82,6 +85,7 @@ class SchedulePage:
                 outline="black", width=2
             )
 
+            # 左上角標題格（斜線）
             table_canvas.create_rectangle(
                 x, y, x + left_w, y + header_h,
                 fill="#bfbfbf", outline="black"
@@ -90,6 +94,7 @@ class SchedulePage:
                 x, y, x + left_w, y + header_h, fill="black"
             )
 
+            # 日期/星期 header 格
             for i in range(5):
                 cx = x + left_w + col_w * i
                 table_canvas.create_rectangle(
@@ -99,9 +104,11 @@ class SchedulePage:
                 text = ["一", "二", "三", "四", "五"][i] if weekday_header else date_text(i)
                 table_canvas.create_text(
                     cx + col_w / 2, y + header_h / 2,
-                    text=text, font=("微軟正黑體", 11, "bold")
+                    text=text, font=("微軟正黑體", 11, "bold"),
+                    fill="black"
                 )
 
+            # 列
             for r, label in enumerate(left_labels):
                 ry = y + header_h + row_h * r
                 table_canvas.create_rectangle(
@@ -110,7 +117,8 @@ class SchedulePage:
                 )
                 table_canvas.create_text(
                     x + left_w / 2, ry + row_h / 2,
-                    text=label, font=("微軟正黑體", 10, "bold")
+                    text=label, font=("微軟正黑體", 10, "bold"),
+                    fill="black"
                 )
                 for i in range(5):
                     cx = x + left_w + col_w * i
@@ -123,10 +131,12 @@ class SchedulePage:
                             cx, ry, cx + col_w, ry + row_h, fill="black"
                         )
                         continue
+                    v = value(row_keys[r], i)
                     table_canvas.create_text(
                         cx + col_w / 2, ry + row_h / 2,
-                        text=value(row_keys[r], i),
-                        font=("微軟正黑體", 11)
+                        text=v,
+                        font=("微軟正黑體", 11),
+                        fill="black"
                     )
 
         table_x = 130

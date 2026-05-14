@@ -5,6 +5,18 @@ from scheduler import Scheduler
 import config_manager
 from collections import defaultdict
 
+_DATE_STYLE = dict(
+    background="black", foreground="#00ff26",
+    fieldbackground="black", selectbackground="#003300",
+    selectforeground="#00ff26", headersbackground="#001a00",
+    headersforeground="#00ff26", normalbackground="black",
+    normalforeground="#00ff26", weekendbackground="black",
+    weekendforeground="#00aa00", othermonthforeground="#005500",
+    othermonthbackground="black", othermonthweforeground="#005500",
+    othermonthwebackground="black", bordercolor="#00ff26",
+    disableddaybackground="black", disableddayforeground="#003300",
+)
+
 COL_XS = [150, 430, 710, 990]
 COL_TITLES = ["內勤人員", "外勤人員", "限制條件", "指定不排班"]
 
@@ -32,7 +44,7 @@ class InputPage:
         self._ids.append(c.create_text(
             360, 95, text="起始日期：",
             font=("微軟正黑體", 10), fill="white"))
-        self.start = DateEntry(c, width=12)
+        self.start = DateEntry(c, width=12, **_DATE_STYLE)
         self._wins.append(c.create_window(435, 95, window=self.start))
 
         self._ids.append(c.create_text(
@@ -42,6 +54,20 @@ class InputPage:
                              insertbackground="#00ff26")
         self.days.insert(0, "5")
         self._wins.append(c.create_window(595, 95, window=self.days))
+
+        self._ids.append(c.create_text(
+            655, 95, text="半天：",
+            font=("微軟正黑體", 10), fill="white"))
+        self.half_day_vars = [tk.BooleanVar() for _ in range(5)]
+        for i, var in enumerate(self.half_day_vars):
+            cb = tk.Checkbutton(
+                c, text=f"第{i + 1}天", variable=var,
+                font=("微軟正黑體", 9),
+                bg="black", fg="#00ff26",
+                selectcolor="#003300",
+                activebackground="black", activeforeground="#00ff26"
+            )
+            self._wins.append(c.create_window(720 + i * 85, 95, window=cb))
 
         for i, (cx, title) in enumerate(zip(COL_XS, COL_TITLES)):
             btn = tk.Button(c, text=f"━━【{title}】━━",
@@ -118,12 +144,17 @@ class InputPage:
         self._col_content[col].append(c.create_text(
             cx - 80, 162, text="選擇人員：",
             font=("微軟正黑體", 9), fill="white", anchor="w"))
-        self.avoid_person = ttk.Combobox(c, width=20, state="readonly")
+        style = ttk.Style()
+        style.configure("Green.TCombobox",
+                         fieldbackground="black", background="#001a00",
+                         foreground="#00ff26", selectbackground="#003300",
+                         selectforeground="#00ff26")
+        self.avoid_person = ttk.Combobox(c, width=20, state="readonly", style="Green.TCombobox")
         self._col_content[col].append(c.create_window(cx, 182, window=self.avoid_person))
         self._col_content[col].append(c.create_text(
             cx - 80, 210, text="選擇日期：",
             font=("微軟正黑體", 9), fill="white", anchor="w"))
-        self.avoid_date = DateEntry(c, width=12)
+        self.avoid_date = DateEntry(c, width=12, **_DATE_STYLE)
         self._col_content[col].append(c.create_window(cx, 228, window=self.avoid_date))
 
         add_btn = tk.Button(c, text="新增", width=6, command=self.add_avoid)
@@ -261,7 +292,9 @@ class InputPage:
         if days > 5:
             messagebox.showerror("錯誤", "最多 5 天")
             return
+        half_days = {i for i, var in enumerate(self.half_day_vars) if var.get()}
         sch = Scheduler(indoor, outdoor, self.parse_avoid(),
-                        self.get(self.no_flag), self.get(self.no_morning_outdoor))
+                        self.get(self.no_flag), self.get(self.no_morning_outdoor),
+                        half_days)
         data = sch.generate(self.start.get_date(), days)
         self.app.show_schedule_page(data)
