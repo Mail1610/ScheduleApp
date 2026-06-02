@@ -6,7 +6,7 @@ import config_manager
 from collections import defaultdict
 
 _P  = "#00ff26"   # 主要文字（原版亮綠）
-_P2 = "#8cff8c"   # 次要提示文字
+_P2 = "#69f0ae"   # 次要提示文字
 _PD = "#005500"   # 暗綠（非重要標籤）
 _BG = "#0d150d"   # 卡片背景（極淡）
 _BH = "#001a00"   # 欄位標題背景

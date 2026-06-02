@@ -1,17 +1,17 @@
 import tkinter as tk
 
 _C = {
-    "bg":        "#060e06",
-    "header":    "#0f2b14",
-    "header_fg": "#00e676",
-    "cell":      "#080e08",
-    "cell_alt":  "#0b150b",
-    "cell_fg":   "#b2dfdb",
-    "border":    "#1b4a25",
-    "title":     "#69f0ae",
-    "btn_bg":    "#0f2b14",
-    "btn_fg":    "#00e676",
-    "btn_hover": "#00e676",
+    "bg":        "#ffffff",
+    "header":    "#e0e0e0",
+    "header_fg": "#000000",
+    "cell":      "#ffffff",
+    "cell_alt":  "#f5f5f5",
+    "cell_fg":   "#000000",
+    "border":    "#888888",
+    "title":     "#000000",
+    "btn_bg":    "#e0e0e0",
+    "btn_fg":    "#000000",
+    "btn_hover": "#cccccc",
 }
 
 
