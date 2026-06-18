@@ -153,11 +153,17 @@ class SchedulePage:
                     )
 
         tx = 53
+        ao_count = data.get("ao_count", 2)
         draw_table("上午外勤", tx, 62, ["登　雲　樓　1"], ["mo"])
         draw_table("第七節外勤", tx, 152, ["登　雲　樓"], ["so"])
-        draw_table("下午外勤", tx, 242,
-                   ["登　雲　樓　1", "登　雲　樓　2"], ["ao1", "ao2"],
-                   weekday_header=True)
+        if ao_count >= 2:
+            draw_table("下午外勤", tx, 242,
+                       ["登　雲　樓　1", "登　雲　樓　2"], ["ao1", "ao2"],
+                       weekday_header=True)
+        else:
+            draw_table("下午外勤", tx, 242,
+                       ["登　雲　樓　1"], ["ao1"],
+                       weekday_header=True)
         draw_table("早上、中午、下午內勤簽到表", tx, 372,
                    ["發　資　料", "寫　白　板", "升　旗", "降　旗"],
                    ["ni1", "ni2", "mi", "ai"])

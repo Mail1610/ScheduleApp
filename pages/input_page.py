@@ -91,6 +91,18 @@ class InputPage:
             )
             self._wins.append(c.create_window(682 + i * 80, 86, window=cb))
 
+        self._ids.append(c.create_text(
+            1048, 86, text="第八節：",
+            font=("微軟正黑體", 10), fill=_P2))
+        self.ao_count = tk.IntVar(value=2)
+        for j, (label, val) in enumerate([("1人", 1), ("2人", 2)]):
+            rb = tk.Radiobutton(c, text=label, variable=self.ao_count, value=val,
+                                font=("微軟正黑體", 9),
+                                bg=_BG, fg=_P,
+                                selectcolor="#003d1a",
+                                activebackground=_BG, activeforeground=_P)
+            self._wins.append(c.create_window(1085 + j * 38, 86, window=rb))
+
         # ── 欄位切換按鈕 ─────────────────────────────────
         for i, (cx, title) in enumerate(zip(COL_XS, COL_TITLES)):
             btn = tk.Button(c, text=f"▸  {title}",
@@ -354,9 +366,12 @@ class InputPage:
             messagebox.showerror("錯誤", "最多 5 天")
             return
         half_days = {i for i, var in enumerate(self.half_day_vars) if var.get()}
+        ao_count = self.ao_count.get()
         sch = Scheduler(indoor, outdoor, self.parse_avoid(),
                         self.get(self.no_flag), self.get(self.no_morning_outdoor),
                         half_days,
-                        self.get(self.no_flag_down), self.get(self.no_afternoon_outdoor))
+                        self.get(self.no_flag_down), self.get(self.no_afternoon_outdoor),
+                        ao_count=ao_count)
         data = sch.generate(self.start.get_date(), days)
+        data["ao_count"] = ao_count
         self.app.show_schedule_page(data)

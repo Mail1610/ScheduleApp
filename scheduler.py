@@ -5,7 +5,7 @@ import random
 
 class Scheduler:
     def __init__(self, indoor, outdoor, avoid_map, no_flag=None, no_morning_outdoor=None,
-                 half_days=None, no_flag_down=None, no_afternoon_outdoor=None):
+                 half_days=None, no_flag_down=None, no_afternoon_outdoor=None, ao_count=2):
         self.indoor = indoor
         self.outdoor = outdoor
         self.avoid = avoid_map
@@ -15,6 +15,7 @@ class Scheduler:
         self.no_flag_down = set(no_flag_down or [])
         self.no_afternoon_outdoor = set(no_afternoon_outdoor or [])
         self.half_days = set(half_days or [])
+        self.ao_count = ao_count
 
         self.icount = defaultdict(int)
         self.ocount = defaultdict(int)
@@ -96,9 +97,12 @@ class Scheduler:
             data["ao1"].append(
                 pick_once(self.outdoor, self.ocount, self.no_afternoon_outdoor, slot="ao1")
             )
-            data["ao2"].append(
-                pick_once(self.outdoor, self.ocount, self.no_afternoon_outdoor, slot="ao2")
-            )
+            if self.ao_count >= 2:
+                data["ao2"].append(
+                    pick_once(self.outdoor, self.ocount, self.no_afternoon_outdoor, slot="ao2")
+                )
+            else:
+                data["ao2"].append("")
 
             if d == dates[0]:
                 data["mi"].append(
