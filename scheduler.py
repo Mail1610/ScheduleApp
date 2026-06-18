@@ -5,13 +5,15 @@ import random
 
 class Scheduler:
     def __init__(self, indoor, outdoor, avoid_map, no_flag=None, no_morning_outdoor=None,
-                 half_days=None, no_flag_down=None, no_afternoon_outdoor=None, ao_count=2):
+                 half_days=None, no_flag_down=None, no_afternoon_outdoor=None, ao_count=2,
+                 no_so_outdoor=None):
         self.indoor = indoor
         self.outdoor = outdoor
         self.avoid = avoid_map
 
         self.no_flag = set(no_flag or [])
         self.no_morning_outdoor = set(no_morning_outdoor or [])
+        self.no_so_outdoor = set(no_so_outdoor or [])
         self.no_flag_down = set(no_flag_down or [])
         self.no_afternoon_outdoor = set(no_afternoon_outdoor or [])
         self.half_days = set(half_days or [])
@@ -49,12 +51,13 @@ class Scheduler:
         }
 
         last_day = dates[-1]
+        weekly_o = defaultdict(int)
 
         for idx, d in enumerate(dates):
             used_today = set()
             is_half_day = idx in self.half_days
 
-            def pick_once(people, count, exclude_names=None, allow_repeat=False, slot=None):
+            def pick_once(people, count, exclude_names=None, allow_repeat=False, slot=None, weekly=False):
                 exclude_names = exclude_names or set()
 
                 candidates = [
@@ -62,7 +65,16 @@ class Scheduler:
                     if self.can_use(p, d, slot)
                        and p not in exclude_names
                        and (allow_repeat or p not in used_today)
+                       and (not weekly or weekly_o[p] < 2)
                 ]
+
+                if not candidates:
+                    candidates = [
+                        p for p in people
+                        if self.can_use(p, d, slot)
+                           and p not in exclude_names
+                           and (not weekly or weekly_o[p] < 2)
+                    ]
 
                 if not candidates:
                     candidates = [
@@ -77,6 +89,8 @@ class Scheduler:
                 candidates.sort(key=lambda x: (count[x], random.random()))
                 p = candidates[0]
                 count[p] += 1
+                if weekly:
+                    weekly_o[p] += 1
 
                 if not allow_repeat:
                     used_today.add(p)
@@ -84,22 +98,22 @@ class Scheduler:
                 return p
 
             data["mo"].append(
-                pick_once(self.outdoor, self.ocount, self.no_morning_outdoor, slot="mo")
+                pick_once(self.outdoor, self.ocount, self.no_morning_outdoor, slot="mo", weekly=True)
             )
 
             if is_half_day:
                 data["so"].append("半天")
             else:
                 data["so"].append(
-                    pick_once(self.outdoor, self.ocount, slot="so")
+                    pick_once(self.outdoor, self.ocount, self.no_so_outdoor, slot="so", weekly=True)
                 )
 
             data["ao1"].append(
-                pick_once(self.outdoor, self.ocount, self.no_afternoon_outdoor, slot="ao1")
+                pick_once(self.outdoor, self.ocount, self.no_afternoon_outdoor, slot="ao1", weekly=True)
             )
             if self.ao_count >= 2:
                 data["ao2"].append(
-                    pick_once(self.outdoor, self.ocount, self.no_afternoon_outdoor, slot="ao2")
+                    pick_once(self.outdoor, self.ocount, self.no_afternoon_outdoor, slot="ao2", weekly=True)
                 )
             else:
                 data["ao2"].append("")

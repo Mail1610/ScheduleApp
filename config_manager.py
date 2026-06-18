@@ -10,6 +10,7 @@ def default_config():
         "outdoor": [],
         "no_flag": [],
         "no_morning_outdoor": [],
+        "no_so_outdoor": [],
         "no_flag_down": [],
         "no_afternoon_outdoor": [],
         "avoid": []
@@ -35,6 +36,7 @@ def load():
             data.setdefault("outdoor", [])
             data.setdefault("no_flag", [])
             data.setdefault("no_morning_outdoor", [])
+            data.setdefault("no_so_outdoor", [])
             data.setdefault("no_flag_down", [])
             data.setdefault("no_afternoon_outdoor", [])
             data.setdefault("avoid", [])
@@ -47,13 +49,14 @@ def load():
 
 
 def save(indoor, outdoor, no_flag, no_morning_outdoor, avoid=None,
-         no_flag_down=None, no_afternoon_outdoor=None):
+         no_flag_down=None, no_afternoon_outdoor=None, no_so_outdoor=None):
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump({
             "indoor": indoor,
             "outdoor": outdoor,
             "no_flag": no_flag,
             "no_morning_outdoor": no_morning_outdoor,
+            "no_so_outdoor": no_so_outdoor or [],
             "no_flag_down": no_flag_down or [],
             "no_afternoon_outdoor": no_afternoon_outdoor or [],
             "avoid": avoid or []

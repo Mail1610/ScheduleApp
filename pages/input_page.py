@@ -174,10 +174,11 @@ class InputPage:
             cx - 120, 148, cx + 120, 690, fill=_BG, outline=_BD, width=1))
 
         for label, y_label, attr, y_box in [
-            ("◆ 不能升旗人員",     165, "no_flag",              210),
-            ("◆ 早上不能外勤",     280, "no_morning_outdoor",   325),
-            ("◆ 不能降旗人員",     395, "no_flag_down",         440),
-            ("◆ 不能站第八節外勤", 510, "no_afternoon_outdoor", 555),
+            ("◆ 不能升旗人員",     163, "no_flag",              200),
+            ("◆ 早上不能外勤",     253, "no_morning_outdoor",   290),
+            ("◆ 不能站第七節外勤", 343, "no_so_outdoor",        380),
+            ("◆ 不能降旗人員",     433, "no_flag_down",         470),
+            ("◆ 不能站第八節外勤", 523, "no_afternoon_outdoor", 560),
         ]:
             self._col_content[col].append(c.create_text(
                 cx, y_label, text=label,
@@ -292,7 +293,8 @@ class InputPage:
             self.get(self.indoor), self.get(self.outdoor),
             self.get(self.no_flag), self.get(self.no_morning_outdoor),
             avoid_entries,
-            self.get(self.no_flag_down), self.get(self.no_afternoon_outdoor)
+            self.get(self.no_flag_down), self.get(self.no_afternoon_outdoor),
+            self.get(self.no_so_outdoor)
         )
         self.refresh_combobox()
         messagebox.showinfo("OK", "已儲存")
@@ -305,6 +307,7 @@ class InputPage:
         self.no_morning_outdoor.insert("1.0", "\n".join(c.get("no_morning_outdoor", [])))
         self.no_flag_down.insert("1.0", "\n".join(c.get("no_flag_down", [])))
         self.no_afternoon_outdoor.insert("1.0", "\n".join(c.get("no_afternoon_outdoor", [])))
+        self.no_so_outdoor.insert("1.0", "\n".join(c.get("no_so_outdoor", [])))
         for entry in c.get("avoid", []):
             self.avoid_listbox.insert(tk.END, f"{entry['name']} | {entry['date']} | {entry['type']}")
 
@@ -371,7 +374,8 @@ class InputPage:
                         self.get(self.no_flag), self.get(self.no_morning_outdoor),
                         half_days,
                         self.get(self.no_flag_down), self.get(self.no_afternoon_outdoor),
-                        ao_count=ao_count)
+                        ao_count=ao_count,
+                        no_so_outdoor=self.get(self.no_so_outdoor))
         data = sch.generate(self.start.get_date(), days)
         data["ao_count"] = ao_count
         self.app.show_schedule_page(data)
